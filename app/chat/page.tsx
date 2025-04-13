@@ -28,6 +28,8 @@ import {
   Pause,
   Play,
   StopCircle,
+  MessageSquare,
+  MessageCircle,
 } from "lucide-react"
 import ChatMessage from "@/components/chat-message"
 import SuggestionButton from "@/components/suggestion-button"
@@ -61,6 +63,8 @@ type Message = {
 type ConsultantStyle = "Direto" | "Detalhado" | "Estratégico" | "Criativo" | null
 
 export default function ChatPage() {
+  // State hooks
+  const [mounted, setMounted] = useState(false)
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "welcome",
@@ -73,37 +77,38 @@ export default function ChatPage() {
   const [input, setInput] = useState("")
   const [isTyping, setIsTyping] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const messagesEndRef = useRef<HTMLDivElement>(null)
-  const isMobile = useMobile()
-  const router = useRouter()
-  const fileInputRef = useRef<HTMLInputElement>(null)
-  const { theme } = useTheme()
-
-  // Image upload state
   const [selectedImage, setSelectedImage] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
-
-  // Audio recording state
   const [isRecording, setIsRecording] = useState(false)
   const [isPaused, setIsPaused] = useState(false)
   const [audioURL, setAudioURL] = useState<string | null>(null)
   const [recordingDuration, setRecordingDuration] = useState(0)
   const [recordingTimer, setRecordingTimer] = useState<NodeJS.Timeout | null>(null)
-
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null)
-  const audioChunksRef = useRef<Blob[]>([])
-
-  // Dialogs state
   const [analyticsOpen, setAnalyticsOpen] = useState(false)
   const [benchmarksOpen, setBenchmarksOpen] = useState(false)
   const [historyOpen, setHistoryOpen] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
-
-  // Consultant style state
   const [consultantStyle, setConsultantStyle] = useState<ConsultantStyle>(null)
+  const [userMenuOpen, setUserMenuOpen] = useState(false)
 
-  // Load consultant style from localStorage on mount
+  // Refs
+  const messagesEndRef = useRef<HTMLDivElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null)
+  const audioChunksRef = useRef<Blob[]>([])
+
+  // Hooks
+  const isMobile = useMobile()
+  const router = useRouter()
+  const { theme } = useTheme()
+
+  // Helper functions
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+  }
+
+  // Effects
   useEffect(() => {
     const savedStyle = localStorage.getItem("consultantStyle") as ConsultantStyle
     if (savedStyle) {
@@ -111,20 +116,24 @@ export default function ChatPage() {
     }
   }, [])
 
-  // Save consultant style to localStorage when changed
   useEffect(() => {
     if (consultantStyle) {
       localStorage.setItem("consultantStyle", consultantStyle)
     }
   }, [consultantStyle])
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
-  }
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   useEffect(() => {
     scrollToBottom()
   }, [messages])
+
+  // Prevent hydration mismatch
+  if (!mounted) {
+    return null
+  }
 
   // Handle image selection
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -491,14 +500,54 @@ export default function ChatPage() {
   ]
 
   const mockChats = [
-    { id: 1, date: "10/04/2023", topic: "Otimização de campanhas", messages: 12 },
-    { id: 2, date: "15/03/2023", topic: "Estratégia de lançamento", messages: 8 },
-    { id: 3, date: "02/02/2023", topic: "Análise de concorrentes", messages: 15 },
+    { 
+      id: 1, 
+      date: "2024-03-10T14:30:00", 
+      topic: "Otimização de campanhas", 
+      messages: 12,
+      platform: "facebook",
+      status: "completed"
+    },
+    { 
+      id: 2, 
+      date: "2024-03-09T10:15:00", 
+      topic: "Estratégia de lançamento", 
+      messages: 8,
+      platform: "google",
+      status: "in_progress"
+    },
+    { 
+      id: 3, 
+      date: "2024-03-08T16:45:00", 
+      topic: "Análise de concorrentes", 
+      messages: 15,
+      platform: "general",
+      status: "completed"
+    },
   ]
 
   // Helper function to get theme-specific classes
   const getThemeClass = (lightClass: string, darkClass: string) => {
     return theme === "light" ? lightClass : darkClass
+  }
+
+  const formatDate = (dateStr: string) => {
+    const date = new Date(dateStr)
+    const today = new Date()
+    const yesterday = new Date(today)
+    yesterday.setDate(yesterday.getDate() - 1)
+
+    if (date.toDateString() === today.toDateString()) {
+      return `Hoje, ${date.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}`
+    } else if (date.toDateString() === yesterday.toDateString()) {
+      return `Ontem, ${date.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}`
+    } else {
+      return date.toLocaleDateString("pt-BR", { 
+        day: "2-digit",
+        month: "2-digit",
+        year: "2-digit"
+      })
+    }
   }
 
   return (
@@ -515,21 +564,22 @@ export default function ChatPage() {
       {/* Sidebar - Desktop only */}
       {!isMobile && (
         <div
-          className={`w-72 border-r flex flex-col ${getThemeClass("border-gray-200", "border-white/10")} ${getThemeClass("bg-white", "bg-black/40")} backdrop-blur-xl transition-all duration-300 z-20 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0`}
+          className={`border-r flex flex-col ${getThemeClass("border-gray-200", "border-white/10")} ${getThemeClass("bg-white", "bg-black/40")} backdrop-blur-xl transition-all duration-300 z-20 ${sidebarOpen ? "w-72" : "w-[72px]"} lg:translate-x-0`}
         >
-          <div className={`p-6 border-b ${getThemeClass("border-gray-200", "border-white/10")} flex items-center space-x-3`}>
+          <div className={`p-4 border-b ${getThemeClass("border-gray-200", "border-white/10")} flex items-center space-x-3`}>
             <div className={`w-10 h-10 rounded-full ${getThemeClass("light-gradient-bg", "dark-gradient-bg")} flex items-center justify-center ${getThemeClass("light-glow", "dark-glow")}`}>
               <Sparkles className="w-5 h-5 text-white" />
             </div>
-            <span className={`font-semibold text-xl ${getThemeClass("light-gradient-text", "dark-gradient-text")}`}>
-              Copilot Ads
-            </span>
+            {sidebarOpen && (
+              <span className={`font-semibold text-xl ${getThemeClass("light-gradient-text", "dark-gradient-text")}`}>
+                Copilot Ads
+              </span>
+            )}
           </div>
 
           <div className="p-4 flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-700 scrollbar-track-transparent">
             <Button
               onClick={() => {
-                // Reset messages to just the welcome message
                 setMessages([
                   {
                     id: "welcome-new",
@@ -540,108 +590,101 @@ export default function ChatPage() {
                   },
                 ])
               }}
-              className={`w-full mb-4 ${getThemeClass("light-gradient-bg", "dark-gradient-bg")} hover:from-purple-600 hover:to-blue-600 text-white ${getThemeClass("light-glow", "dark-glow")}`}
+              className={`w-full mb-6 ${getThemeClass("light-gradient-bg", "dark-gradient-bg")} hover:from-purple-600 hover:to-blue-600 text-white rounded-lg p-3 flex items-center justify-center gap-2 ${getThemeClass("light-glow", "dark-glow")}`}
             >
-              <PlusCircle className="mr-2 h-4 w-4" />
-              Novo Chat
+              <PlusCircle className="h-4 w-4" />
+              {sidebarOpen && <span>New Chat</span>}
             </Button>
 
-            <div className="mb-6">
-              <h3 className={`text-xs uppercase ${getThemeClass("text-gray-500", "text-gray-400")} font-medium mb-3 px-2`}>Plataformas</h3>
-              <Button
-                variant="ghost"
-                className={`w-full justify-start mb-2 ${getThemeClass("text-gray-700 hover:bg-gray-100", "text-gray-300 hover:text-white hover:bg-white/5")}`}
-                onClick={() => navigateToPlatform("Facebook Ads")}
-              >
-                <Facebook className="mr-3 h-4 w-4 text-blue-400" />
-                Facebook Ads
-              </Button>
-              <Button
-                variant="ghost"
-                className={`w-full justify-start mb-2 ${getThemeClass("text-gray-700 hover:bg-gray-100", "text-gray-300 hover:text-white hover:bg-white/5")}`}
-                onClick={() => navigateToPlatform("Google Ads")}
-              >
-                <Google className="mr-3 h-4 w-4 text-red-400" />
-                Google Ads
-              </Button>
-            </div>
+            {/* Chat History Section */}
+            <div className="space-y-6">
+              {/* This Month Section */}
+              <div>
+                {sidebarOpen && (
+                  <h3 className={`text-xs uppercase ${getThemeClass("text-gray-500", "text-gray-400")} font-medium mb-2 px-2`}>
+                    This Month (June)
+                  </h3>
+                )}
+                <div className="space-y-1">
+                  {mockChats
+                    .filter(chat => new Date(chat.date).getMonth() === new Date().getMonth())
+                    .map((chat) => (
+                      <Button
+                        key={chat.id}
+                        variant="ghost"
+                        className={`w-full justify-start p-2 text-left ${
+                          getThemeClass(
+                            "text-gray-700 hover:bg-gray-100 border border-gray-100",
+                            "text-gray-300 hover:bg-white/5 border border-white/10"
+                          )
+                        } rounded-lg flex items-center gap-3`}
+                        onClick={() => {
+                          // Load chat functionality can be added here
+                        }}
+                      >
+                        <MessageSquare className={`w-4 h-4 ${getThemeClass("text-purple-600", "text-purple-400")}`} />
+                        {sidebarOpen && <span className="truncate flex-1">{chat.topic}</span>}
+                      </Button>
+                    ))}
+                </div>
+              </div>
 
-            <div className="mb-6">
-              <h3 className={`text-xs uppercase ${getThemeClass("text-gray-500", "text-gray-400")} font-medium mb-3 px-2`}>Ferramentas</h3>
-              <Button
-                variant="ghost"
-                className={`w-full justify-start mb-2 ${getThemeClass("text-gray-700 hover:bg-gray-100", "text-gray-300 hover:text-white hover:bg-white/5")}`}
-                onClick={() => setAnalyticsOpen(true)}
-              >
-                <BarChart3 className="mr-3 h-4 w-4 text-purple-400" />
-                Analytics
-              </Button>
-              <Button
-                variant="ghost"
-                className={`w-full justify-start mb-2 ${getThemeClass("text-gray-700 hover:bg-gray-100", "text-gray-300 hover:text-white hover:bg-white/5")}`}
-                onClick={() => setBenchmarksOpen(true)}
-              >
-                <Target className="mr-3 h-4 w-4 text-green-400" />
-                Benchmarks
-              </Button>
-            </div>
-
-            <div className="mb-6">
-              <h3 className={`text-xs uppercase ${getThemeClass("text-gray-500", "text-gray-400")} font-medium mb-3 px-2`}>Conta</h3>
-              <Button
-                variant="ghost"
-                className={`w-full justify-start mb-2 ${getThemeClass("text-gray-700 hover:bg-gray-100", "text-gray-300 hover:text-white hover:bg-white/5")}`}
-                onClick={() => setHistoryOpen(true)}
-              >
-                <History className="mr-3 h-4 w-4" />
-                Histórico
-              </Button>
-              <Button
-                variant="ghost"
-                className={`w-full justify-start mb-2 ${getThemeClass("text-gray-700 hover:bg-gray-100", "text-gray-300 hover:text-white hover:bg-white/5")}`}
-                onClick={() => setProfileOpen(true)}
-              >
-                <User className="mr-3 h-4 w-4" />
-                Perfil
-              </Button>
-              <Button
-                variant="ghost"
-                className={`w-full justify-start ${getThemeClass("text-gray-700 hover:bg-gray-100", "text-gray-300 hover:text-white hover:bg-white/5")}`}
-                onClick={() => setSettingsOpen(true)}
-              >
-                <Settings className="mr-3 h-4 w-4" />
-                Configurações
-              </Button>
-            </div>
-
-            <div className="mt-auto pt-4 border-t border-white/10">
-              <div className={`${getThemeClass("bg-gradient-to-r from-purple-100 to-blue-100", "bg-gradient-to-r from-purple-900/30 to-blue-900/30")} rounded-xl p-4`}>
-                <h4 className="font-medium text-sm mb-2">Estilo de Consultor</h4>
-                <div className="grid grid-cols-2 gap-2">
-                  {[
-                    { name: "Direto" as const, icon: <Zap className="w-3 h-3" /> },
-                    { name: "Detalhado" as const, icon: <BarChart3 className="w-3 h-3" /> },
-                    { name: "Estratégico" as const, icon: <Star className="w-3 h-3" /> },
-                    { name: "Criativo" as const, icon: <Lightbulb className="w-3 h-3" /> },
-                  ].map((style) => (
-                    <Button
-                      key={style.name}
-                      size="sm"
-                      variant={consultantStyle === style.name ? "default" : "outline"}
-                      onClick={() => handleStyleSelect(style.name)}
-                      className={`h-8 ${
-                        consultantStyle === style.name
-                          ? "bg-gradient-to-r from-purple-500 to-blue-500 text-white border-none"
-                          : `${getThemeClass("border-gray-200 bg-white/70 hover:bg-white/90", "border-white/10 bg-black/30 hover:bg-black/50")}`
-                      } flex items-center justify-center`}
-                    >
-                      {style.icon}
-                      <span className="ml-1 text-xs">{style.name}</span>
-                    </Button>
-                  ))}
+              {/* Previous Month Section */}
+              <div>
+                {sidebarOpen && (
+                  <h3 className={`text-xs uppercase ${getThemeClass("text-gray-500", "text-gray-400")} font-medium mb-2 px-2`}>
+                    May
+                  </h3>
+                )}
+                <div className="space-y-1">
+                  {mockChats
+                    .filter(chat => new Date(chat.date).getMonth() === new Date().getMonth() - 1)
+                    .map((chat) => (
+                      <Button
+                        key={chat.id}
+                        variant="ghost"
+                        className={`w-full justify-start p-2 text-left ${
+                          getThemeClass(
+                            "text-gray-700 hover:bg-gray-100 border border-gray-100",
+                            "text-gray-300 hover:bg-white/5 border border-white/10"
+                          )
+                        } rounded-lg flex items-center gap-3`}
+                        onClick={() => {
+                          // Load chat functionality can be added here
+                        }}
+                      >
+                        <MessageSquare className={`w-4 h-4 ${getThemeClass("text-purple-600", "text-purple-400")}`} />
+                        {sidebarOpen && <span className="truncate flex-1">{chat.topic}</span>}
+                      </Button>
+                    ))}
                 </div>
               </div>
             </div>
+          </div>
+
+          {/* Plans Button - Fixed at bottom */}
+          <div className="absolute bottom-0 left-0 right-0">
+            <Button
+              onClick={() => router.push("/plans")}
+              className={`w-full h-16 ${getThemeClass("bg-gradient-to-r from-purple-500 to-blue-500", "bg-gradient-to-r from-purple-600 to-blue-600")} hover:opacity-90 transition-all flex items-center justify-between px-6 rounded-none`}
+              style={{ margin: '-1px' }}
+            >
+              {sidebarOpen ? (
+                <>
+                  <div>
+                    <h4 className="font-medium text-sm text-white mb-0.5">Exibir planos</h4>
+                    <p className="text-xs text-white/80">Acesso ilimitado, recursos de...</p>
+                  </div>
+                  <div className="w-8 h-8 bg-white/10 flex items-center justify-center backdrop-blur-sm">
+                    <Sparkles className="w-4 h-4 text-white" />
+                  </div>
+                </>
+              ) : (
+                <div className="w-full h-full flex items-center justify-center">
+                  <Sparkles className="w-5 h-5 text-white" />
+                </div>
+              )}
+            </Button>
           </div>
         </div>
       )}
@@ -663,7 +706,7 @@ export default function ChatPage() {
           onPlatformSelect={navigateToPlatform}
           onAnalyticsOpen={() => setAnalyticsOpen(true)}
           onBenchmarksOpen={() => setBenchmarksOpen(true)}
-          onHistoryOpen={() => setHistoryOpen(true)}
+          onHistoryOpen={() => setProfileOpen(true)}
           onProfileOpen={() => setProfileOpen(true)}
           onSettingsOpen={() => setSettingsOpen(true)}
           consultantStyle={consultantStyle}
@@ -675,25 +718,14 @@ export default function ChatPage() {
       <div className={`flex-1 flex flex-col h-full relative z-10 ${getThemeClass("bg-white/50", "bg-black/20")} backdrop-blur-sm`}>
         {/* Chat header */}
         <div className={`p-4 border-b ${getThemeClass("border-gray-200", "border-white/10")} ${getThemeClass("light-bg-blur", "dark-bg-blur")} flex items-center justify-between`}>
-          {isMobile ? (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => router.push("/")}
-              className={getThemeClass("text-gray-700 hover:bg-gray-100", "text-gray-300 hover:text-white")}
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-          ) : (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-              className={`lg:hidden ${getThemeClass("text-gray-700 hover:bg-gray-100", "text-gray-300 hover:text-white")}`}
-            >
-              <Menu className="h-5 w-5" />
-            </Button>
-          )}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            className={`${getThemeClass("text-gray-700 hover:bg-gray-100", "text-gray-300 hover:text-white")}`}
+          >
+            <Menu className="h-5 w-5" />
+          </Button>
           <h1 className={`text-lg font-medium ${getThemeClass("light-gradient-text", "dark-gradient-text")} flex items-center`}>
             Consultor de Tráfego Pago
             {consultantStyle && (
@@ -703,9 +735,80 @@ export default function ChatPage() {
             )}
           </h1>
           <div className="flex items-center space-x-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigateToPlatform("Facebook Ads")}
+              className={`${getThemeClass("text-gray-700 hover:bg-gray-100", "text-gray-300 hover:bg-white/5")} flex items-center gap-2`}
+            >
+              <Facebook className="h-4 w-4 text-blue-400" />
+              <span>Facebook</span>
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigateToPlatform("Google Ads")}
+              className={`${getThemeClass("text-gray-700 hover:bg-gray-100", "text-gray-300 hover:bg-white/5")} flex items-center gap-2`}
+            >
+              <Google className="h-4 w-4 text-red-400" />
+              <span>Google</span>
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setAnalyticsOpen(true)}
+              className={`${getThemeClass("text-gray-700 hover:bg-gray-100", "text-gray-300 hover:bg-white/5")} flex items-center gap-2`}
+            >
+              <BarChart3 className="h-4 w-4 text-purple-400" />
+              <span>Analytics</span>
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setBenchmarksOpen(true)}
+              className={`${getThemeClass("text-gray-700 hover:bg-gray-100", "text-gray-300 hover:bg-white/5")} flex items-center gap-2`}
+            >
+              <Target className="h-4 w-4 text-green-400" />
+              <span>Benchmarks</span>
+            </Button>
             <ThemeToggle />
-            <div className={`w-9 h-9 rounded-full ${getThemeClass("light-gradient-bg", "dark-gradient-bg")} flex items-center justify-center ${getThemeClass("light-glow", "dark-glow")}`}>
-              <Sparkles className="w-4 h-4 text-white" />
+            <div className="relative">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setUserMenuOpen(!userMenuOpen)}
+                className={`w-9 h-9 rounded-full ${getThemeClass("light-gradient-bg", "dark-gradient-bg")} flex items-center justify-center ${getThemeClass("light-glow", "dark-glow")}`}
+              >
+                <Sparkles className="w-4 h-4 text-white" />
+              </Button>
+              {userMenuOpen && (
+                <div className={`absolute right-0 mt-2 w-48 rounded-lg shadow-lg ${getThemeClass("bg-white", "bg-black/90")} ${getThemeClass("border-gray-200", "border-white/10")} border`}>
+                  <div className="py-1">
+                    <Button
+                      variant="ghost"
+                      onClick={() => {
+                        setUserMenuOpen(false)
+                        setProfileOpen(true)
+                      }}
+                      className="w-full justify-start px-4 py-2 text-sm"
+                    >
+                      <User className="mr-2 h-4 w-4" />
+                      Perfil
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      onClick={() => {
+                        setUserMenuOpen(false)
+                        setSettingsOpen(true)
+                      }}
+                      className="w-full justify-start px-4 py-2 text-sm"
+                    >
+                      <Settings className="mr-2 h-4 w-4" />
+                      Configurações
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -1100,53 +1203,21 @@ export default function ChatPage() {
               Compare o desempenho das suas campanhas com o mercado
             </DialogDescription>
           </DialogHeader>
-          {/* Benchmarks content */}
-        </DialogContent>
-      </Dialog>
-
-      {/* History Dialog */}
-      <Dialog open={historyOpen} onOpenChange={setHistoryOpen}>
-        <DialogContent className={`${getThemeClass("bg-white", "bg-black/90")} ${getThemeClass("border-gray-200", "border-white/10")} ${getThemeClass("text-gray-900", "text-white")}`}>
-          <DialogHeader>
-            <DialogTitle className={`text-xl ${getThemeClass("light-gradient-text", "dark-gradient-text")}`}>
-              Histórico de Conversas
-            </DialogTitle>
-            <DialogDescription className={getThemeClass("text-gray-600", "text-gray-400")}>
-              Veja suas conversas anteriores com o Copilot Ads
-            </DialogDescription>
-          </DialogHeader>
-          
           <div className="mt-4">
-            <div className={`${getThemeClass("bg-white border-gray-200", "bg-black/30 border-white/10")} rounded-lg overflow-hidden border`}>
-              <table className="w-full">
-                <thead className={getThemeClass("bg-gray-50", "bg-black/50")}>
-                  <tr>
-                    <th className={`text-left p-3 text-sm ${getThemeClass("text-gray-600", "text-gray-400")}`}>Data</th>
-                    <th className={`text-left p-3 text-sm ${getThemeClass("text-gray-600", "text-gray-400")}`}>Tópico</th>
-                    <th className={`text-left p-3 text-sm ${getThemeClass("text-gray-600", "text-gray-400")}`}>Mensagens</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {mockChats.map((chat) => (
-                    <tr key={chat.id} className={`border-t ${getThemeClass("border-gray-100", "border-white/5")}`}>
-                      <td className="p-3">{chat.date}</td>
-                      <td className="p-3">{chat.topic}</td>
-                      <td className="p-3">{chat.messages}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className={`${getThemeClass("bg-white border-gray-200", "bg-black/30 border-white/10")} rounded-lg p-4 border`}>
+              <h3 className="text-lg font-medium mb-3">Benchmarks do Setor</h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div className={`p-3 ${getThemeClass("bg-gray-50", "bg-black/20")} rounded-lg`}>
+                  <p className={`text-sm ${getThemeClass("text-gray-600", "text-gray-400")}`}>CTR Médio</p>
+                  <p className="text-xl font-bold">2.1%</p>
+                </div>
+                <div className={`p-3 ${getThemeClass("bg-gray-50", "bg-black/20")} rounded-lg`}>
+                  <p className={`text-sm ${getThemeClass("text-gray-600", "text-gray-400")}`}>CPC Médio</p>
+                  <p className="text-xl font-bold">R$ 1.05</p>
+                </div>
+              </div>
             </div>
           </div>
-
-          <DialogFooter>
-            <Button
-              onClick={() => setHistoryOpen(false)}
-              className={`${getThemeClass("light-gradient-bg", "dark-gradient-bg")} hover:from-purple-600 hover:to-blue-600`}
-            >
-              Fechar
-            </Button>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
 
@@ -1155,53 +1226,74 @@ export default function ChatPage() {
         <DialogContent className={`${getThemeClass("bg-white", "bg-black/90")} ${getThemeClass("border-gray-200", "border-white/10")} ${getThemeClass("text-gray-900", "text-white")}`}>
           <DialogHeader>
             <DialogTitle className={`text-xl ${getThemeClass("light-gradient-text", "dark-gradient-text")}`}>
-              Perfil
+              Perfil do Consultor
             </DialogTitle>
             <DialogDescription className={getThemeClass("text-gray-600", "text-gray-400")}>
-              Gerencie suas informações e preferências
+              Escolha o estilo de consultoria que melhor atende suas necessidades
             </DialogDescription>
           </DialogHeader>
 
-          <div className="mt-4 space-y-4">
-            <div className={`p-4 ${getThemeClass("bg-gray-50", "bg-black/30")} rounded-lg`}>
-              <h3 className="font-medium mb-2">Informações Pessoais</h3>
-              <div className="space-y-2">
-                <Input placeholder="Nome" className={getThemeClass("light-input", "dark-input")} />
-                <Input placeholder="Email" type="email" className={getThemeClass("light-input", "dark-input")} />
-              </div>
-            </div>
-
-            <div className={`p-4 ${getThemeClass("bg-gray-50", "bg-black/30")} rounded-lg`}>
-              <h3 className="font-medium mb-2">Preferências de Notificação</h3>
-              <div className="space-y-2">
-                <label className="flex items-center space-x-2">
-                  <input type="checkbox" className="rounded" />
-                  <span>Notificações por email</span>
-                </label>
-                <label className="flex items-center space-x-2">
-                  <input type="checkbox" className="rounded" />
-                  <span>Notificações push</span>
-                </label>
-              </div>
-            </div>
-
-            <Button
-              onClick={logout}
-              variant="destructive"
-              className="w-full"
+          <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <button
+              onClick={() => handleStyleSelect("Direto")}
+              className={`p-4 rounded-lg border transition-all ${
+                consultantStyle === "Direto"
+                  ? getThemeClass("border-purple-500 bg-purple-50", "border-purple-500 bg-purple-500/10")
+                  : getThemeClass("border-gray-200 hover:border-purple-500", "border-white/10 hover:border-purple-500")
+              }`}
             >
-              Sair
-            </Button>
+              <Zap className={`w-8 h-8 mb-2 ${consultantStyle === "Direto" ? "text-purple-500" : getThemeClass("text-gray-400", "text-gray-500")}`} />
+              <h3 className="font-medium mb-1">Direto</h3>
+              <p className={`text-sm ${getThemeClass("text-gray-600", "text-gray-400")}`}>
+                Respostas objetivas e práticas
+              </p>
+            </button>
+
+            <button
+              onClick={() => handleStyleSelect("Detalhado")}
+              className={`p-4 rounded-lg border transition-all ${
+                consultantStyle === "Detalhado"
+                  ? getThemeClass("border-purple-500 bg-purple-50", "border-purple-500 bg-purple-500/10")
+                  : getThemeClass("border-gray-200 hover:border-purple-500", "border-white/10 hover:border-purple-500")
+              }`}
+            >
+              <Target className={`w-8 h-8 mb-2 ${consultantStyle === "Detalhado" ? "text-purple-500" : getThemeClass("text-gray-400", "text-gray-500")}`} />
+              <h3 className="font-medium mb-1">Detalhado</h3>
+              <p className={`text-sm ${getThemeClass("text-gray-600", "text-gray-400")}`}>
+                Explicações completas e análises profundas
+              </p>
+            </button>
+
+            <button
+              onClick={() => handleStyleSelect("Estratégico")}
+              className={`p-4 rounded-lg border transition-all ${
+                consultantStyle === "Estratégico"
+                  ? getThemeClass("border-purple-500 bg-purple-50", "border-purple-500 bg-purple-500/10")
+                  : getThemeClass("border-gray-200 hover:border-purple-500", "border-white/10 hover:border-purple-500")
+              }`}
+            >
+              <BarChart3 className={`w-8 h-8 mb-2 ${consultantStyle === "Estratégico" ? "text-purple-500" : getThemeClass("text-gray-400", "text-gray-500")}`} />
+              <h3 className="font-medium mb-1">Estratégico</h3>
+              <p className={`text-sm ${getThemeClass("text-gray-600", "text-gray-400")}`}>
+                Foco em resultados de longo prazo
+              </p>
+            </button>
+
+            <button
+              onClick={() => handleStyleSelect("Criativo")}
+              className={`p-4 rounded-lg border transition-all ${
+                consultantStyle === "Criativo"
+                  ? getThemeClass("border-purple-500 bg-purple-50", "border-purple-500 bg-purple-500/10")
+                  : getThemeClass("border-gray-200 hover:border-purple-500", "border-white/10 hover:border-purple-500")
+              }`}
+            >
+              <Lightbulb className={`w-8 h-8 mb-2 ${consultantStyle === "Criativo" ? "text-purple-500" : getThemeClass("text-gray-400", "text-gray-500")}`} />
+              <h3 className="font-medium mb-1">Criativo</h3>
+              <p className={`text-sm ${getThemeClass("text-gray-600", "text-gray-400")}`}>
+                Ideias inovadoras e abordagens diferentes
+              </p>
+            </button>
           </div>
-
-          <DialogFooter>
-            <Button
-              onClick={() => setProfileOpen(false)}
-              className={`${getThemeClass("light-gradient-bg", "dark-gradient-bg")} hover:from-purple-600 hover:to-blue-600`}
-            >
-              Salvar
-            </Button>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
 
