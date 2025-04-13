@@ -47,6 +47,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { useTheme } from "next-themes"
+import { logout } from "@/app/auth/logout"
 
 type MessageContent = string | { type: "image"; url: string } | { type: "audio"; url: string; duration: number }
 
@@ -66,7 +67,7 @@ export default function ChatPage() {
       role: "assistant",
       content:
         "👋 Olá! Sou seu consultor Copilot Ads. Como posso ajudar a otimizar suas campanhas de tráfego pago hoje?",
-      timestamp: new Date(),
+      timestamp: new Date(Date.now()),
     },
   ])
   const [input, setInput] = useState("")
@@ -283,12 +284,13 @@ export default function ChatPage() {
 
     // Simulate AI response after a delay
     setTimeout(() => {
+      const now = new Date()
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: "assistant",
         content:
           "Recebi seu áudio! Estou analisando o conteúdo para fornecer a melhor orientação para suas campanhas de tráfego pago.",
-        timestamp: new Date(),
+        timestamp: now,
       }
 
       setMessages((prev) => [...prev, assistantMessage])
@@ -322,12 +324,13 @@ export default function ChatPage() {
 
       // Simulate AI response after a delay
       setTimeout(() => {
+        const now = new Date()
         const assistantMessage: Message = {
           id: (Date.now() + 1).toString(),
           role: "assistant",
           content:
             "Recebi sua imagem! Analisando o conteúdo visual para fornecer insights sobre sua campanha de anúncios.",
-          timestamp: new Date(),
+          timestamp: now,
         }
 
         setMessages((prev) => [...prev, assistantMessage])
@@ -341,11 +344,12 @@ export default function ChatPage() {
     if (!input.trim()) return
 
     // Add user message
+    const now = new Date()
     const userMessage: Message = {
       id: Date.now().toString(),
       role: "user",
       content: input,
-      timestamp: new Date(),
+      timestamp: now,
     }
 
     setMessages((prev) => [...prev, userMessage])
@@ -380,7 +384,7 @@ export default function ChatPage() {
         id: (Date.now() + 1).toString(),
         role: "assistant",
         content: styledResponse,
-        timestamp: new Date(),
+        timestamp: now,
       }
 
       setMessages((prev) => [...prev, assistantMessage])
@@ -498,11 +502,11 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="flex h-screen relative">
+    <div className="flex h-screen relative overflow-hidden">
       {/* Animated background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-[30%] -left-[10%] w-[70%] h-[70%] rounded-full bg-purple-600/10 dark:bg-purple-600/10 blur-[120px]"></div>
-        <div className="absolute -bottom-[30%] -right-[10%] w-[70%] h-[70%] rounded-full bg-blue-600/10 dark:bg-blue-600/10 blur-[120px]"></div>
+        <div className={`absolute -top-[30%] -left-[10%] w-[70%] h-[70%] rounded-full ${getThemeClass("bg-purple-600/5", "bg-purple-600/10")} blur-[120px] animate-pulse`} />
+        <div className={`absolute -bottom-[30%] -right-[10%] w-[70%] h-[70%] rounded-full ${getThemeClass("bg-blue-600/5", "bg-blue-600/10")} blur-[120px] animate-pulse`} />
       </div>
 
       {/* Hidden file input for image upload */}
@@ -511,7 +515,7 @@ export default function ChatPage() {
       {/* Sidebar - Desktop only */}
       {!isMobile && (
         <div
-          className={`w-72 border-r ${getThemeClass("border-gray-200", "border-white/10")} ${getThemeClass("bg-white", "bg-black/40")} backdrop-blur-xl transition-all duration-300 z-20 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0`}
+          className={`w-72 border-r flex flex-col ${getThemeClass("border-gray-200", "border-white/10")} ${getThemeClass("bg-white", "bg-black/40")} backdrop-blur-xl transition-all duration-300 z-20 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0`}
         >
           <div className={`p-6 border-b ${getThemeClass("border-gray-200", "border-white/10")} flex items-center space-x-3`}>
             <div className={`w-10 h-10 rounded-full ${getThemeClass("light-gradient-bg", "dark-gradient-bg")} flex items-center justify-center ${getThemeClass("light-glow", "dark-glow")}`}>
@@ -522,7 +526,7 @@ export default function ChatPage() {
             </span>
           </div>
 
-          <div className="p-4">
+          <div className="p-4 flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-700 scrollbar-track-transparent">
             <Button
               onClick={() => {
                 // Reset messages to just the welcome message
@@ -668,7 +672,7 @@ export default function ChatPage() {
       )}
 
       {/* Main chat area */}
-      <div className="flex-1 flex flex-col h-full relative z-10">
+      <div className={`flex-1 flex flex-col h-full relative z-10 ${getThemeClass("bg-white/50", "bg-black/20")} backdrop-blur-sm`}>
         {/* Chat header */}
         <div className={`p-4 border-b ${getThemeClass("border-gray-200", "border-white/10")} ${getThemeClass("light-bg-blur", "dark-bg-blur")} flex items-center justify-between`}>
           {isMobile ? (
@@ -707,7 +711,7 @@ export default function ChatPage() {
         </div>
 
         {/* Messages container */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-6">
+        <div className={`flex-1 overflow-y-auto p-4 space-y-6 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-700 scrollbar-track-transparent ${getThemeClass("bg-gradient-to-b from-transparent to-white/30", "bg-gradient-to-b from-transparent to-black/30")}`}>
           <AnimatePresence>
             {messages.map((message, index) => (
               <motion.div
@@ -1087,5 +1091,175 @@ export default function ChatPage() {
 
       {/* Benchmarks Dialog */}
       <Dialog open={benchmarksOpen} onOpenChange={setBenchmarksOpen}>
-        <DialogContent className={`${getThemeClass("bg-white", "bg-black/90")} ${getThemeClass("border-gray-200", "border-white/10")} ${getThemeClass("text-gray-900", "text-white")}`}
-\
+        <DialogContent className={`${getThemeClass("bg-white", "bg-black/90")} ${getThemeClass("border-gray-200", "border-white/10")} ${getThemeClass("text-gray-900", "text-white")}`}>
+          <DialogHeader>
+            <DialogTitle className={`text-xl ${getThemeClass("light-gradient-text", "dark-gradient-text")}`}>
+              Benchmarks
+            </DialogTitle>
+            <DialogDescription className={getThemeClass("text-gray-600", "text-gray-400")}>
+              Compare o desempenho das suas campanhas com o mercado
+            </DialogDescription>
+          </DialogHeader>
+          {/* Benchmarks content */}
+        </DialogContent>
+      </Dialog>
+
+      {/* History Dialog */}
+      <Dialog open={historyOpen} onOpenChange={setHistoryOpen}>
+        <DialogContent className={`${getThemeClass("bg-white", "bg-black/90")} ${getThemeClass("border-gray-200", "border-white/10")} ${getThemeClass("text-gray-900", "text-white")}`}>
+          <DialogHeader>
+            <DialogTitle className={`text-xl ${getThemeClass("light-gradient-text", "dark-gradient-text")}`}>
+              Histórico de Conversas
+            </DialogTitle>
+            <DialogDescription className={getThemeClass("text-gray-600", "text-gray-400")}>
+              Veja suas conversas anteriores com o Copilot Ads
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="mt-4">
+            <div className={`${getThemeClass("bg-white border-gray-200", "bg-black/30 border-white/10")} rounded-lg overflow-hidden border`}>
+              <table className="w-full">
+                <thead className={getThemeClass("bg-gray-50", "bg-black/50")}>
+                  <tr>
+                    <th className={`text-left p-3 text-sm ${getThemeClass("text-gray-600", "text-gray-400")}`}>Data</th>
+                    <th className={`text-left p-3 text-sm ${getThemeClass("text-gray-600", "text-gray-400")}`}>Tópico</th>
+                    <th className={`text-left p-3 text-sm ${getThemeClass("text-gray-600", "text-gray-400")}`}>Mensagens</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {mockChats.map((chat) => (
+                    <tr key={chat.id} className={`border-t ${getThemeClass("border-gray-100", "border-white/5")}`}>
+                      <td className="p-3">{chat.date}</td>
+                      <td className="p-3">{chat.topic}</td>
+                      <td className="p-3">{chat.messages}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              onClick={() => setHistoryOpen(false)}
+              className={`${getThemeClass("light-gradient-bg", "dark-gradient-bg")} hover:from-purple-600 hover:to-blue-600`}
+            >
+              Fechar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Profile Dialog */}
+      <Dialog open={profileOpen} onOpenChange={setProfileOpen}>
+        <DialogContent className={`${getThemeClass("bg-white", "bg-black/90")} ${getThemeClass("border-gray-200", "border-white/10")} ${getThemeClass("text-gray-900", "text-white")}`}>
+          <DialogHeader>
+            <DialogTitle className={`text-xl ${getThemeClass("light-gradient-text", "dark-gradient-text")}`}>
+              Perfil
+            </DialogTitle>
+            <DialogDescription className={getThemeClass("text-gray-600", "text-gray-400")}>
+              Gerencie suas informações e preferências
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="mt-4 space-y-4">
+            <div className={`p-4 ${getThemeClass("bg-gray-50", "bg-black/30")} rounded-lg`}>
+              <h3 className="font-medium mb-2">Informações Pessoais</h3>
+              <div className="space-y-2">
+                <Input placeholder="Nome" className={getThemeClass("light-input", "dark-input")} />
+                <Input placeholder="Email" type="email" className={getThemeClass("light-input", "dark-input")} />
+              </div>
+            </div>
+
+            <div className={`p-4 ${getThemeClass("bg-gray-50", "bg-black/30")} rounded-lg`}>
+              <h3 className="font-medium mb-2">Preferências de Notificação</h3>
+              <div className="space-y-2">
+                <label className="flex items-center space-x-2">
+                  <input type="checkbox" className="rounded" />
+                  <span>Notificações por email</span>
+                </label>
+                <label className="flex items-center space-x-2">
+                  <input type="checkbox" className="rounded" />
+                  <span>Notificações push</span>
+                </label>
+              </div>
+            </div>
+
+            <Button
+              onClick={logout}
+              variant="destructive"
+              className="w-full"
+            >
+              Sair
+            </Button>
+          </div>
+
+          <DialogFooter>
+            <Button
+              onClick={() => setProfileOpen(false)}
+              className={`${getThemeClass("light-gradient-bg", "dark-gradient-bg")} hover:from-purple-600 hover:to-blue-600`}
+            >
+              Salvar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Settings Dialog */}
+      <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
+        <DialogContent className={`${getThemeClass("bg-white", "bg-black/90")} ${getThemeClass("border-gray-200", "border-white/10")} ${getThemeClass("text-gray-900", "text-white")}`}>
+          <DialogHeader>
+            <DialogTitle className={`text-xl ${getThemeClass("light-gradient-text", "dark-gradient-text")}`}>
+              Configurações
+            </DialogTitle>
+            <DialogDescription className={getThemeClass("text-gray-600", "text-gray-400")}>
+              Personalize sua experiência no Copilot Ads
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="mt-4 space-y-4">
+            <div className={`p-4 ${getThemeClass("bg-gray-50", "bg-black/30")} rounded-lg`}>
+              <h3 className="font-medium mb-2">Aparência</h3>
+              <div className="flex items-center justify-between">
+                <span>Tema</span>
+                <ThemeToggle />
+              </div>
+            </div>
+
+            <div className={`p-4 ${getThemeClass("bg-gray-50", "bg-black/30")} rounded-lg`}>
+              <h3 className="font-medium mb-2">Idioma</h3>
+              <select className={`w-full p-2 rounded ${getThemeClass("bg-white border-gray-200", "bg-black/30 border-white/10")} border`}>
+                <option value="pt-BR">Português (Brasil)</option>
+                <option value="en">English</option>
+                <option value="es">Español</option>
+              </select>
+            </div>
+
+            <div className={`p-4 ${getThemeClass("bg-gray-50", "bg-black/30")} rounded-lg`}>
+              <h3 className="font-medium mb-2">Privacidade</h3>
+              <div className="space-y-2">
+                <label className="flex items-center space-x-2">
+                  <input type="checkbox" className="rounded" />
+                  <span>Salvar histórico de conversas</span>
+                </label>
+                <label className="flex items-center space-x-2">
+                  <input type="checkbox" className="rounded" />
+                  <span>Permitir coleta de dados de uso</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              onClick={() => setSettingsOpen(false)}
+              className={`${getThemeClass("light-gradient-bg", "dark-gradient-bg")} hover:from-purple-600 hover:to-blue-600`}
+            >
+              Salvar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  )
+}

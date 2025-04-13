@@ -129,7 +129,7 @@ export default function ChatMessage({ message }: ChatMessageProps) {
               "Você"
             )}
             <span className={`text-xs ${getThemeClass("text-gray-500", "text-gray-400")} ml-2`}>
-              {new Date(message.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+              {formatTime(new Date(message.timestamp).getHours() * 60 + new Date(message.timestamp).getMinutes())}
             </span>
           </div>
 
