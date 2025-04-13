@@ -1,0 +1,208 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Light mode */
+    --background: 0 0% 100%;
+    --foreground: 240 10% 3.9%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 3.9%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 3.9%;
+
+    --primary: 262.1 83.3% 57.8%;
+    --primary-foreground: 210 20% 98%;
+
+    --secondary: 240 4.8% 95.9%;
+    --secondary-foreground: 240 5.9% 10%;
+
+    --muted: 240 4.8% 95.9%;
+    --muted-foreground: 240 3.8% 46.1%;
+
+    --accent: 240 4.8% 95.9%;
+    --accent-foreground: 240 5.9% 10%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 240 5.9% 90%;
+    --input: 240 5.9% 90%;
+    --ring: 262.1 83.3% 57.8%;
+
+    --radius: 0.5rem;
+
+    /* Custom light mode variables */
+    --chat-bg: 0 0% 98%;
+    --chat-sidebar: 0 0% 100%;
+    --chat-message-user: 262.1 83.3% 57.8%;
+    --chat-message-assistant: 0 0% 100%;
+    --chat-message-border: 240 5.9% 90%;
+    --chat-input-bg: 0 0% 100%;
+  }
+
+  .dark {
+    /* Dark mode - keeping the existing dark theme */
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
+
+    --card: 240 10% 3.9%;
+    --card-foreground: 0 0% 98%;
+
+    --popover: 240 10% 3.9%;
+    --popover-foreground: 0 0% 98%;
+
+    --primary: 262.1 83.3% 57.8%;
+    --primary-foreground: 210 20% 98%;
+
+    --secondary: 240 3.7% 15.9%;
+    --secondary-foreground: 0 0% 98%;
+
+    --muted: 240 3.7% 15.9%;
+    --muted-foreground: 240 5% 64.9%;
+
+    --accent: 240 3.7% 15.9%;
+    --accent-foreground: 0 0% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 240 3.7% 15.9%;
+    --input: 240 3.7% 15.9%;
+    --ring: 262.1 83.3% 57.8%;
+
+    /* Custom dark mode variables */
+    --chat-bg: 240 10% 3.9%;
+    --chat-sidebar: 240 10% 5%;
+    --chat-message-user: 262.1 83.3% 57.8%;
+    --chat-message-assistant: 240 10% 5%;
+    --chat-message-border: 240 3.7% 15.9%;
+    --chat-input-bg: 240 10% 5%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    background-color: hsl(var(--chat-bg));
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(to bottom, #a855f7, #3b82f6);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(to bottom, #9333ea, #2563eb);
+}
+
+/* Animations */
+@keyframes gradient-shift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.animate-gradient {
+  background-size: 200% 200%;
+  animation: gradient-shift 3s ease infinite;
+}
+
+.animate-pulse-slow {
+  animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* Glass effect */
+.glass-effect {
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* Light/Dark mode specific styles */
+.light-glow {
+  @apply shadow-[0_0_15px_rgba(168,85,247,0.3)];
+}
+
+.dark-glow {
+  @apply shadow-[0_0_15px_rgba(168,85,247,0.5)];
+}
+
+.light-gradient-bg {
+  @apply bg-gradient-to-r from-purple-500/80 to-blue-500/80;
+}
+
+.dark-gradient-bg {
+  @apply bg-gradient-to-r from-purple-500 to-blue-500;
+}
+
+.light-gradient-text {
+  @apply bg-gradient-to-r from-purple-700 to-blue-700 bg-clip-text text-transparent;
+}
+
+.dark-gradient-text {
+  @apply bg-gradient-to-r from-purple-200 to-blue-200 bg-clip-text text-transparent;
+}
+
+.light-bg-blur {
+  @apply bg-white/80 backdrop-blur-xl;
+}
+
+.dark-bg-blur {
+  @apply bg-black/40 backdrop-blur-xl;
+}
+
+.light-border {
+  @apply border-gray-200;
+}
+
+.dark-border {
+  @apply border-white/10;
+}
+
+.light-card {
+  @apply bg-white shadow-md;
+}
+
+.dark-card {
+  @apply bg-black/50 border-white/10;
+}
+
+.light-input {
+  @apply bg-white border-gray-200;
+}
+
+.dark-input {
+  @apply bg-black/50 border-white/10;
+}
